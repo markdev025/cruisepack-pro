@@ -1,713 +1,528 @@
-// CruisePack Pro Web Edition (hybrid dashboard, category grid, custom excursions, photo upload, thumbnails, global item search)
+/* ============================================================
+   CruisePack Pro — Full Logic Layer
+   Modern dashboard, modal system, sub-items, templates, export
+   ============================================================ */
 
-const app = document.getElementById("app");
-const tabs = document.querySelectorAll("nav button");
-const sections = document.querySelectorAll(".tab");
-const darkToggle = document.getElementById("darkToggle");
+/* ------------------------------------------------------------
+   GLOBAL STATE
+------------------------------------------------------------ */
 
-let male = { items: [], carry: [] };
-let female = { items: [], carry: [] };
-let allowanceKg = 23;
-
-const W = {
-    tshirt: 0.18, shorts: 0.25, trousers: 0.45, dress: 0.30,
-    evening_dress: 0.45, formal_shirt: 0.30, suit_jacket: 0.90,
-    underwear: 0.04, socks: 0.04, shoes: 0.90, heels: 0.70,
-    swimwear: 0.15, toiletries: 0.60, suncream: 0.20,
-    meds: 0.15, cables: 0.08, passport: 0.02, docs: 0.03,
-    electronics: 0.90, rain_jacket: 0.30, light_layer: 0.35,
-    hat: 0.12, water_shoes: 0.40, towel: 0.35, bug_spray: 0.15,
-    sleepwear: 0.20, hotel_outfit: 0.35, makeup_bag: 0.50,
-    hair_tools: 0.60
+let tripData = {
+    cruiseLine: "",
+    ship: "",
+    departDate: "",
+    allowanceKg: 50,
+    categories: []
 };
 
-let categories = {
-    Essentials: [
-        ["Underwear (Male)", "underwear", 9, "male", null],
-        ["Socks (Male)", "socks", 9, "male", null],
-        ["Underwear (Female)", "underwear", 10, "female", null],
-        ["Makeup bag (Female)", "makeup_bag", 1, "female", null],
-        ["Hair tools (Female)", "hair_tools", 1, "female", null],
-        ["Toiletries (Shared)", "toiletries", 1, "shared", null]
-    ],
-    "Cruise Nights": [
-        ["T-shirts (Male)", "tshirt", 7, "male", null],
-        ["Shorts (Male)", "shorts", 3, "male", null],
-        ["Trousers (Male)", "trousers", 2, "male", null],
-        ["Formal shirts (Male)", "formal_shirt", 2, "male", null],
-        ["Suit jacket (Male)", "suit_jacket", 1, "male", null],
-        ["Dresses (Female)", "dress", 5, "female", null],
-        ["Tops (Female)", "tshirt", 7, "female", null],
-        ["Shorts/Skirts (Female)", "shorts", 3, "female", null],
-        ["Evening dresses (Female)", "evening_dress", 2, "female", null]
-    ],
-    "Hotel Stay": [
-        ["Hotel sleepwear (Male)", "sleepwear", 1, "male", null],
-        ["Hotel evening outfit (Male)", "hotel_outfit", 1, "male", null],
-        ["Hotel sleepwear (Female)", "sleepwear", 1, "female", null],
-        ["Hotel evening outfit (Female)", "hotel_outfit", 1, "female", null]
-    ],
-    Excursions: [
-        ["Water shoes (Both)", "water_shoes", 1, "both", null],
-        ["Beach towel (Both)", "towel", 1, "both", null],
-        ["Bug spray (Both)", "bug_spray", 1, "both", null]
-    ],
-    Weather: [
-        ["Light rain jacket (Both)", "rain_jacket", 1, "both", null],
-        ["Light evening layer (Both)", "light_layer", 1, "both", null],
-        ["Sun hat (Both)", "hat", 1, "both", null]
-    ],
-    "Shared Items": [
-        ["Suncream (Shared)", "suncream", 1, "shared", null],
-        ["Medication pack (Shared)", "meds", 1, "shared", null],
-        ["Charging cables (Shared)", "cables", 1, "shared", null]
-    ],
-    "Carry-on": [
-        ["Passport (Both)", "passport", 1, "carry", null],
-        ["Travel documents (Both)", "docs", 1, "carry", null],
-        ["Electronics (Both)", "electronics", 1, "carry", null],
-        ["Medication (Both)", "meds", 1, "carry", null]
-    ]
-};
+let templates = [];
+let activeCategoryKey = null;
+let activeItemKey = null;
+let activeSubItemIndex = null;
 
-let customExcursions = {};
+/* ------------------------------------------------------------
+   TAB SWITCHING
+------------------------------------------------------------ */
 
-function switchTab(tabName) {
-    sections.forEach(sec => sec.classList.remove("active"));
-    document.getElementById(`tab-${tabName}`).classList.add("active");
-}
+document.querySelectorAll(".nav-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
 
-tabs.forEach(btn => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-});
-
-// Default tab: dashboard
-switchTab("dashboard");
-
-function applyDarkModeFromStorage() {
-    const stored = localStorage.getItem("cruisepack_dark");
-    if (stored === "dark") app.classList.add("dark");
-    else app.classList.remove("dark");
-}
-applyDarkModeFromStorage();
-
-darkToggle.addEventListener("click", () => {
-    app.classList.toggle("dark");
-    localStorage.setItem("cruisepack_dark", app.classList.contains("dark") ? "dark" : "light");
-});
-
-// Trip presets
-const cruisePreset = document.getElementById("cruisePreset");
-const airlinePreset = document.getElementById("airlinePreset");
-const allowanceInput = document.getElementById("allowanceKg");
-const allowanceDisplay = document.getElementById("allowanceDisplay");
-
-cruisePreset.addEventListener("change", () => {
-    const v = cruisePreset.value;
-    const tripName = document.getElementById("tripName");
-    const cruiseLine = document.getElementById("cruiseLine");
-    const ship = document.getElementById("ship");
-    const departPort = document.getElementById("departPort");
-    const departDate = document.getElementById("departDate");
-
-    if (v === "prima") {
-        tripName.value = "NCL Prima – Orlando 6 Sept";
-        cruiseLine.value = "Norwegian Cruise Line";
-        ship.value = "Prima";
-        departPort.value = "Orlando (Port Canaveral)";
-        departDate.value = "6 September";
-    } else if (v === "epic") {
-        tripName.value = "NCL Epic – Mediterranean";
-        cruiseLine.value = "Norwegian Cruise Line";
-        ship.value = "Epic";
-        departPort.value = "Barcelona";
-        departDate.value = "June";
-    } else if (v === "msc_virtuosa") {
-        tripName.value = "MSC Virtuosa – Northern Europe";
-        cruiseLine.value = "MSC Cruises";
-        ship.value = "Virtuosa";
-        departPort.value = "Southampton";
-        departDate.value = "July";
-    } else if (v === "icon") {
-        tripName.value = "Icon of the Seas – Caribbean";
-        cruiseLine.value = "Royal Caribbean";
-        ship.value = "Icon of the Seas";
-        departPort.value = "Miami";
-        departDate.value = "Winter";
-    } else if (v === "iona") {
-        tripName.value = "P&O Iona – Norwegian Fjords";
-        cruiseLine.value = "P&O Cruises";
-        ship.value = "Iona";
-        departPort.value = "Southampton";
-        departDate.value = "May";
-    }
-    updateDashboardTripDetails();
-});
-
-airlinePreset.addEventListener("change", () => {
-    const v = airlinePreset.value;
-    if (v === "ba" || v === "virgin") allowanceInput.value = "23";
-    else if (v === "tui") allowanceInput.value = "20";
-    else if (v === "jet2") allowanceInput.value = "22";
-    updateAllowance();
-});
-
-allowanceInput.addEventListener("input", updateAllowance);
-
-function updateAllowance() {
-    const val = parseFloat(allowanceInput.value) || 23;
-    allowanceKg = val;
-    allowanceDisplay.textContent = `${val} kg`;
-    updateDashboard();
-    updateDashboardTripDetails();
-}
-
-// Categories + items
-const categoryList = document.getElementById("categoryList");
-const itemsArea = document.getElementById("itemsArea");
-const newCategoryName = document.getElementById("newCategoryName");
-const addCategoryBtn = document.getElementById("addCategoryBtn");
-const globalItemSearch = document.getElementById("globalItemSearch");
-
-function renderCategories() {
-    categoryList.innerHTML = "";
-    Object.keys(categories).forEach(cat => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "cat-row";
-
-        const btn = document.createElement("button");
-        btn.className = "cat-btn";
-        btn.textContent = cat;
-        btn.addEventListener("click", () => renderItemsForCategory(cat));
-
-        const del = document.createElement("button");
-        del.className = "cat-del";
-        del.textContent = "Remove";
-        del.addEventListener("click", () => {
-            delete categories[cat];
-            renderCategories();
-            buildGlobalItemList();
-            itemsArea.innerHTML = "";
+        const target = tab.dataset.tab;
+        document.querySelectorAll(".tab").forEach(section => {
+            section.classList.remove("tab-active");
         });
-
-        wrapper.appendChild(btn);
-        wrapper.appendChild(del);
-        categoryList.appendChild(wrapper);
+        document.getElementById(target).classList.add("tab-active");
     });
-}
-renderCategories();
-
-// Global item search list
-function buildGlobalItemList() {
-    globalItemSearch.innerHTML = `<option value="">Search existing items…</option>`;
-    const seen = new Set();
-
-    Object.entries(categories).forEach(([cat, items]) => {
-        items.forEach(([label, key, qty, who, photo]) => {
-            if (!seen.has(label)) {
-                seen.add(label);
-                const opt = document.createElement("option");
-                opt.value = JSON.stringify({ label, key, qty, who });
-                opt.textContent = `${label} (${key})`;
-                globalItemSearch.appendChild(opt);
-            }
-        });
-    });
-}
-buildGlobalItemList();
-
-globalItemSearch.addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    const item = JSON.parse(e.target.value);
-    document.getElementById("itemLabel").value = item.label;
-    document.getElementById("itemKey").value = item.key;
-    document.getElementById("itemQty").value = item.qty;
-    document.getElementById("itemWho").value = item.who;
 });
 
-function renderItemsForCategory(cat) {
-    itemsArea.innerHTML = "";
-    const items = categories[cat] || [];
-    items.forEach(([label, key, qty, who, photo]) => {
-        const id = `${cat}-${label}`.replace(/\s+/g, "_");
-        const wrapper = document.createElement("label");
+/* ------------------------------------------------------------
+   THEME TOGGLE (light/dark)
+------------------------------------------------------------ */
 
-        const main = document.createElement("div");
-        main.className = "item-main";
-
-        const line = document.createElement("span");
-        line.innerHTML = `
-            <input type="checkbox" id="${id}">
-            ${label} (${qty} × ${W[key].toFixed(2)} kg)
-        `;
-        main.appendChild(line);
-
-        if (photo) {
-            const img = document.createElement("img");
-            img.src = photo;
-            img.className = "thumb";
-            main.appendChild(img);
-        }
-
-        const cb = line.querySelector("input");
-        cb.addEventListener("change", () => toggleItem(label, key, qty, who, cb.checked, photo));
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "item-del";
-        delBtn.textContent = "Remove";
-        delBtn.addEventListener("click", () => {
-            categories[cat] = categories[cat].filter(i => i[0] !== label);
-            renderItemsForCategory(cat);
-            buildGlobalItemList();
-        });
-
-        wrapper.appendChild(main);
-        wrapper.appendChild(delBtn);
-        itemsArea.appendChild(wrapper);
-    });
-}
-
-addCategoryBtn.addEventListener("click", () => {
-    const name = newCategoryName.value.trim();
-    if (!name) return;
-    if (!categories[name]) categories[name] = [];
-    newCategoryName.value = "";
-    renderCategories();
-    buildGlobalItemList();
+const themeToggleBtn = document.getElementById("themeToggleBtn");
+themeToggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("theme-dark");
 });
 
-// Add item
-const itemCategoryName = document.getElementById("itemCategoryName");
-const itemLabel = document.getElementById("itemLabel");
-const itemKey = document.getElementById("itemKey");
-const itemQty = document.getElementById("itemQty");
-const itemWho = document.getElementById("itemWho");
-const itemPhotoFile = document.getElementById("itemPhotoFile");
-const addItemBtn = document.getElementById("addItemBtn");
-
-addItemBtn.addEventListener("click", () => {
-    const cat = itemCategoryName.value.trim();
-    const label = itemLabel.value.trim();
-    const key = itemKey.value.trim();
-    const qty = parseInt(itemQty.value, 10) || 1;
-    const who = itemWho.value;
-    const file = itemPhotoFile.files[0];
-
-    if (!cat || !label || !key) return;
-    if (!W[key]) {
-        alert("Unknown weight key. Use one of: " + Object.keys(W).join(", "));
-        return;
-    }
-
-    const addItemToCategories = (photoDataUrl) => {
-        if (!categories[cat]) categories[cat] = [];
-        categories[cat].push([label, key, qty, who, photoDataUrl || null]);
-
-        itemCategoryName.value = "";
-        itemLabel.value = "";
-        itemKey.value = "";
-        itemQty.value = "1";
-        itemPhotoFile.value = "";
-
-        renderCategories();
-        buildGlobalItemList();
-        renderItemsForCategory(cat);
-    };
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-            addItemToCategories(reader.result);
-        };
-        reader.readAsDataURL(file);
-    } else {
-        addItemToCategories(null);
-    }
-});
-
-// Item logic
-function toggleItem(label, key, qty, who, checked, photo) {
-    const weight = W[key];
-
-    if (who === "male") {
-        if (checked) male.items.push({ label, weight, qty, photo });
-        else male.items = male.items.filter(i => i.label !== label);
-    } else if (who === "female") {
-        if (checked) female.items.push({ label, weight, qty, photo });
-        else female.items = female.items.filter(i => i.label !== label);
-    } else if (who === "both") {
-        if (checked) {
-            male.items.push({ label, weight, qty, photo });
-            female.items.push({ label, weight, qty, photo });
-        } else {
-            male.items = male.items.filter(i => i.label !== label);
-            female.items = female.items.filter(i => i.label !== label);
-        }
-    } else if (who === "shared") {
-        if (checked) {
-            const m = male.items.reduce((a, b) => a + b.weight * b.qty, 0);
-            const f = female.items.reduce((a, b) => a + b.weight * b.qty, 0);
-            if (m <= f) male.items.push({ label, weight, qty, photo });
-            else female.items.push({ label, weight, qty, photo });
-        } else {
-            male.items = male.items.filter(i => i.label !== label);
-            female.items = female.items.filter(i => i.label !== label);
-        }
-    } else if (who === "carry") {
-        if (checked) {
-            male.carry.push({ label, weight, qty, photo });
-            female.carry.push({ label, weight, qty, photo });
-        } else {
-            male.carry = male.carry.filter(i => i.label !== label);
-            female.carry = female.carry.filter(i => i.label !== label);
-        }
-    }
-
-    updateDashboard();
-}
-
-// Excursion templates
-const excursionTemplate = document.getElementById("excursionTemplate");
-const applyExcursion = document.getElementById("applyExcursion");
-const newExcName = document.getElementById("newExcName");
-const newExcItemKey = document.getElementById("newExcItemKey");
-const addExcTemplate = document.getElementById("addExcTemplate");
-const customExcList = document.getElementById("customExcList");
-
-applyExcursion.addEventListener("click", () => {
-    const v = excursionTemplate.value;
-    if (!v) return;
-
-    if (v === "beach") {
-        categories.Excursions.push(["Extra swimwear (Both)", "swimwear", 1, "both", null]);
-    } else if (v === "snorkel") {
-        categories.Excursions.push(["Snorkel set (Both)", "water_shoes", 1, "both", null]);
-    } else if (v === "city") {
-        categories.Excursions.push(["Comfortable shoes (Both)", "shoes", 1, "both", null]);
-    } else if (v === "rainforest") {
-        categories.Excursions.push(["Rain jacket (Both)", "rain_jacket", 1, "both", null]);
-    } else if (v === "waterpark") {
-        categories.Excursions.push(["Water shoes (Both)", "water_shoes", 1, "both", null]);
-    } else if (v === "formal") {
-        categories["Cruise Nights"].push(["Extra formal outfit (Female)", "evening_dress", 1, "female", null]);
-    } else if (v === "seaday") {
-        categories["Cruise Nights"].push(["Lounge wear (Both)", "light_layer", 1, "both", null]);
-    } else if (v.startsWith("custom_")) {
-        const name = v.replace("custom_", "");
-        const itemKey = customExcursions[name];
-        if (itemKey && W[itemKey]) {
-            categories.Excursions.push([`${name} (Custom)`, itemKey, 1, "both", null]);
-        }
-    }
-
-    renderCategories();
-    buildGlobalItemList();
-    alert("Excursion template applied. Choose category to see added items.");
-});
-
-addExcTemplate.addEventListener("click", () => {
-    const name = newExcName.value.trim();
-    const key = newExcItemKey.value.trim();
-    if (!name || !key) return;
-    if (!W[key]) {
-        alert("Unknown weight key. Use one of: " + Object.keys(W).join(", "));
-        return;
-    }
-    customExcursions[name] = key;
-    newExcName.value = "";
-    newExcItemKey.value = "";
-    renderExcursionTemplates();
-});
-
-function renderExcursionTemplates() {
-    const sel = document.getElementById("excursionTemplate");
-    sel.innerHTML = `
-        <option value="">Choose template…</option>
-        <option value="beach">Beach Day</option>
-        <option value="snorkel">Snorkelling</option>
-        <option value="city">City Walk</option>
-        <option value="rainforest">Rainforest Hike</option>
-        <option value="waterpark">Waterpark</option>
-        <option value="formal">Formal Night</option>
-        <option value="seaday">Sea Day Relax</option>
-    `;
-    customExcList.innerHTML = "";
-    Object.keys(customExcursions).forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = "custom_" + name;
-        opt.textContent = name;
-        sel.appendChild(opt);
-
-        const row = document.createElement("div");
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
-        removeBtn.className = "item-del";
-        removeBtn.addEventListener("click", () => {
-            delete customExcursions[name];
-            renderExcursionTemplates();
-        });
-
-        row.textContent = `${name} → ${customExcursions[name]} `;
-        row.appendChild(removeBtn);
-        customExcList.appendChild(row);
-    });
-}
-renderExcursionTemplates();
-
-// Dashboard elements
-const maleCheckedEl = document.getElementById("maleChecked");
-const femaleCheckedEl = document.getElementById("femaleChecked");
-const maleCarryEl = document.getElementById("maleCarry");
-const femaleCarryEl = document.getElementById("femaleCarry");
-const maleStatusEl = document.getElementById("maleStatus");
-const femaleStatusEl = document.getElementById("femaleStatus");
-const autoBalanceBtn = document.getElementById("autoBalance");
-const maleMeter = document.getElementById("maleMeter");
-const femaleMeter = document.getElementById("femaleMeter");
-const maleMeterLabel = document.getElementById("maleMeterLabel");
-const femaleMeterLabel = document.getElementById("femaleMeterLabel");
-
-const dashCruiseLine = document.getElementById("dashCruiseLine");
-const dashShip = document.getElementById("dashShip");
-const dashSailing = document.getElementById("dashSailing");
-const dashDepartPort = document.getElementById("dashDepartPort");
-const dashAllowance = document.getElementById("dashAllowance");
-const dashPackedCount = document.getElementById("dashPackedCount");
-const dashRemainingCount = document.getElementById("dashRemainingCount");
-const dashThumbs = document.getElementById("dashThumbs");
-const goPackingBtn = document.getElementById("goPacking");
-
-goPackingBtn.addEventListener("click", () => switchTab("packing"));
-
-function updateDashboardTripDetails() {
-    dashCruiseLine.textContent = document.getElementById("cruiseLine").value || "–";
-    dashShip.textContent = document.getElementById("ship").value || "–";
-    dashSailing.textContent = document.getElementById("departDate").value || "–";
-    dashDepartPort.textContent = document.getElementById("departPort").value || "–";
-    dashAllowance.textContent = `${allowanceKg} kg`;
-}
+/* ------------------------------------------------------------
+   DASHBOARD UPDATE
+------------------------------------------------------------ */
 
 function updateDashboard() {
-    const mChecked = male.items.reduce((a, b) => a + b.weight * b.qty, 0);
-    const fChecked = female.items.reduce((a, b) => a + b.weight * b.qty, 0);
-    const mCarry = male.carry.reduce((a, b) => a + b.weight * b.qty, 0);
-    const fCarry = female.carry.reduce((a, b) => a + b.weight * b.qty, 0);
+    document.getElementById("dashCruiseLine").textContent = tripData.cruiseLine || "";
+    document.getElementById("dashShip").textContent = tripData.ship || "";
+    document.getElementById("dashDepartDate").textContent = tripData.departDate || "";
+    document.getElementById("dashAllowance").textContent = tripData.allowanceKg + " kg checked";
 
-    maleCheckedEl.textContent = mChecked.toFixed(2) + " kg";
-    femaleCheckedEl.textContent = fChecked.toFixed(2) + " kg";
-    maleCarryEl.textContent = mCarry.toFixed(2) + " kg";
-    femaleCarryEl.textContent = fCarry.toFixed(2) + " kg";
+    let checkedWeight = 0;
+    let carryWeight = 0;
+    let packedCount = 0;
 
-    maleStatusEl.textContent =
-        mChecked > allowanceKg ? `Over by ${(mChecked - allowanceKg).toFixed(2)} kg` :
-        `${(allowanceKg - mChecked).toFixed(2)} kg remaining`;
-
-    femaleStatusEl.textContent =
-        fChecked > allowanceKg ? `Over by ${(fChecked - allowanceKg).toFixed(2)} kg` :
-        `${(allowanceKg - fChecked).toFixed(2)} kg remaining`;
-
-    const mPct = Math.min(100, (mChecked / allowanceKg) * 100);
-    const fPct = Math.min(100, (fChecked / allowanceKg) * 100);
-
-    maleMeter.style.width = mPct + "%";
-    femaleMeter.style.width = fPct + "%";
-
-    maleMeterLabel.textContent = `${mChecked.toFixed(2)} kg / ${allowanceKg} kg`;
-    femaleMeterLabel.textContent = `${fChecked.toFixed(2)} kg / ${allowanceKg} kg`;
-
-    const packedCount =
-        male.items.length + female.items.length + male.carry.length + female.carry.length;
-    dashPackedCount.textContent = packedCount;
-
-    let totalDefinedItems = 0;
-    Object.values(categories).forEach(arr => totalDefinedItems += arr.length);
-    dashRemainingCount.textContent = Math.max(0, totalDefinedItems - packedCount);
-
-    dashThumbs.innerHTML = "";
-    const allItems = [...male.items, ...female.items, ...male.carry, ...female.carry];
-    const seen = new Set();
-    allItems.forEach(i => {
-        if (i.photo && !seen.has(i.photo)) {
-            seen.add(i.photo);
-            const img = document.createElement("img");
-            img.src = i.photo;
-            img.className = "thumb";
-            dashThumbs.appendChild(img);
-        }
+    tripData.categories.forEach(cat => {
+        cat.items.forEach(item => {
+            item.subItems.forEach(sub => {
+                if (sub.packed) {
+                    packedCount++;
+                    if (sub.weightOverride) {
+                        checkedWeight += sub.weightOverride;
+                    }
+                }
+            });
+        });
     });
 
-    updateDashboardTripDetails();
+    document.getElementById("dashCheckedWeight").textContent = checkedWeight.toFixed(1) + " kg";
+    document.getElementById("dashCarryWeight").textContent = carryWeight.toFixed(1) + " kg";
+    document.getElementById("dashPackedItems").textContent = packedCount;
+    document.getElementById("dashAllowanceKg").textContent = tripData.allowanceKg + " kg";
+    document.getElementById("dashRemainingKg").textContent = (tripData.allowanceKg - checkedWeight).toFixed(1) + " kg";
 }
-updateDashboard();
 
-// Auto-balance
-autoBalanceBtn.addEventListener("click", () => {
-    const all = [...male.items, ...female.items];
-    male.items = [];
-    female.items = [];
-    all.sort((a, b) => (b.weight * b.qty) - (a.weight * a.qty));
-    all.forEach(item => {
-        const m = male.items.reduce((a, b) => a + b.weight * b.qty, 0);
-        const f = female.items.reduce((a, b) => a + b.weight * b.qty, 0);
-        if (m <= f) male.items.push(item);
-        else female.items.push(item);
+/* ------------------------------------------------------------
+   CATEGORY + ITEM RENDERING
+------------------------------------------------------------ */
+
+function renderCategories() {
+    const grid = document.getElementById("categoryGrid");
+    grid.innerHTML = "";
+
+    tripData.categories.forEach(cat => {
+        const card = document.createElement("div");
+        card.className = "category-card";
+
+        const header = document.createElement("div");
+        header.className = "category-card-header";
+
+        const title = document.createElement("div");
+        title.className = "category-card-title";
+        title.textContent = cat.label;
+
+        header.appendChild(title);
+        card.appendChild(header);
+
+        const items = document.createElement("div");
+        items.className = "category-card-items";
+
+        cat.items.forEach(item => {
+            const btn = document.createElement("button");
+            btn.className = "item-btn";
+            btn.textContent = item.label;
+            btn.addEventListener("click", () => openItemModal(cat.key, item.key));
+            items.appendChild(btn);
+        });
+
+        card.appendChild(items);
+        grid.appendChild(card);
     });
-    updateDashboard();
-    alert("Auto‑balanced between travellers.");
-});
+}
 
-// Weather
-const weatherApiKeyInput = document.getElementById("weatherApiKey");
-const weatherOutput = document.getElementById("weatherOutput");
-const fetchWeatherBtn = document.getElementById("fetchWeather");
+/* ------------------------------------------------------------
+   ADD CATEGORY
+------------------------------------------------------------ */
 
-fetchWeatherBtn.addEventListener("click", async () => {
-    const key = weatherApiKeyInput.value.trim();
-    const city = document.getElementById("departPort").value || "Orlando";
-    if (!key) {
-        weatherOutput.textContent = "Enter OpenWeather API key.";
-        return;
-    }
-    try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${key}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.main) {
-            const temp = data.main.temp;
-            const rain = data.rain ? JSON.stringify(data.rain) : "No rain data";
-            weatherOutput.textContent =
-                `Weather for ${city}:\nTemp: ${temp} °C\nRain: ${rain}`;
-        } else {
-            weatherOutput.textContent = "Could not fetch weather.";
-        }
-    } catch (e) {
-        weatherOutput.textContent = "Error fetching weather.";
-    }
-});
+document.getElementById("addCategoryBtn").addEventListener("click", () => {
+    const label = prompt("Category name:");
+    if (!label) return;
 
-// Trip save/load
-const newTripBtn = document.getElementById("newTrip");
-const saveTripBtn = document.getElementById("saveTrip");
-const loadTripBtn = document.getElementById("loadTrip");
-const packingPreview = document.getElementById("packingPreview");
+    const key = "cat_" + Date.now();
 
-newTripBtn.addEventListener("click", () => {
-    male = { items: [], carry: [] };
-    female = { items: [], carry: [] };
-    updateDashboard();
-    packingPreview.textContent = "";
-    alert("New trip started.");
-});
+    tripData.categories.push({
+        label,
+        key,
+        items: []
+    });
 
-saveTripBtn.addEventListener("click", () => {
-    const trip = {
-        tripName: document.getElementById("tripName").value,
-        cruiseLine: document.getElementById("cruiseLine").value,
-        ship: document.getElementById("ship").value,
-        departPort: document.getElementById("departPort").value,
-        departDate: document.getElementById("departDate").value,
-        allowanceKg,
-        male,
-        female,
-        categories,
-        customExcursions
-    };
-    localStorage.setItem("cruisepack_trip", JSON.stringify(trip));
-    alert("Trip saved.");
-});
-
-loadTripBtn.addEventListener("click", () => {
-    const trip = JSON.parse(localStorage.getItem("cruisepack_trip"));
-    if (!trip) {
-        alert("No saved trip.");
-        return;
-    }
-    document.getElementById("tripName").value = trip.tripName;
-    document.getElementById("cruiseLine").value = trip.cruiseLine;
-    document.getElementById("ship").value = trip.ship;
-    document.getElementById("departPort").value = trip.departPort;
-    document.getElementById("departDate").value = trip.departDate;
-    allowanceKg = trip.allowanceKg || 23;
-    allowanceInput.value = allowanceKg;
-    male = trip.male;
-    female = trip.female;
-    categories = trip.categories || categories;
-    customExcursions = trip.customExcursions || {};
     renderCategories();
-    buildGlobalItemList();
-    renderExcursionTemplates();
-    updateAllowance();
-    updateDashboard();
-    alert("Trip loaded.");
 });
 
-// PDF export
-const exportPdfBtn = document.getElementById("exportPdf");
+/* ------------------------------------------------------------
+   ADD ITEM
+------------------------------------------------------------ */
 
-function buildPackingPreview() {
-    let out = "";
-    out += `Trip: ${document.getElementById("tripName").value}\n`;
-    out += `Cruise line: ${document.getElementById("cruiseLine").value}\n`;
-    out += `Ship: ${document.getElementById("ship").value}\n`;
-    out += `Departure: ${document.getElementById("departPort").value} on ${document.getElementById("departDate").value}\n`;
-    out += `Allowance per bag: ${allowanceKg} kg\n\n`;
+document.getElementById("addItemBtn").addEventListener("click", () => {
+    if (tripData.categories.length === 0) {
+        alert("Add a category first.");
+        return;
+    }
 
-    out += "Male checked:\n";
-    male.items.forEach(i => {
-        out += `  - ${i.label} (${i.qty} × ${i.weight.toFixed(2)} kg)`;
-        if (i.photo) out += " [photo]";
-        out += "\n";
-    });
-    out += "\nMale carry‑on:\n";
-    male.carry.forEach(i => {
-        out += `  - ${i.label} (${i.qty} × ${i.weight.toFixed(2)} kg)`;
-        if (i.photo) out += " [photo]";
-        out += "\n";
+    const catLabel = prompt("Which category? (type exact name)");
+    const cat = tripData.categories.find(c => c.label === catLabel);
+    if (!cat) {
+        alert("Category not found.");
+        return;
+    }
+
+    const label = prompt("Item name:");
+    if (!label) return;
+
+    const key = "item_" + Date.now();
+
+    cat.items.push({
+        label,
+        key,
+        qty: 1,
+        who: "",
+        subItems: [
+            {
+                name: label,
+                description: "",
+                photos: [],
+                weightOverride: null,
+                packed: false
+            }
+        ]
     });
 
-    out += "\nFemale checked:\n";
-    female.items.forEach(i => {
-        out += `  - ${i.label} (${i.qty} × ${i.weight.toFixed(2)} kg)`;
-        if (i.photo) out += " [photo]";
-        out += "\n";
-    });
-    out += "\nFemale carry‑on:\n";
-    female.carry.forEach(i => {
-        out += `  - ${i.label} (${i.qty} × ${i.weight.toFixed(2)} kg)`;
-        if (i.photo) out += " [photo]";
-        out += "\n";
-    });
+    renderCategories();
+});
 
-    packingPreview.textContent = out;
-    return out;
+/* ------------------------------------------------------------
+   ITEM MODAL
+------------------------------------------------------------ */
+
+const itemModalOverlay = document.getElementById("itemModalOverlay");
+const itemModal = document.getElementById("itemModal");
+const closeItemModalBtn = document.getElementById("closeItemModalBtn");
+
+closeItemModalBtn.addEventListener("click", closeItemModal);
+
+function openItemModal(catKey, itemKey) {
+    activeCategoryKey = catKey;
+    activeItemKey = itemKey;
+
+    const cat = tripData.categories.find(c => c.key === catKey);
+    const item = cat.items.find(i => i.key === itemKey);
+
+    document.getElementById("modalItemTitle").textContent = item.label;
+
+    renderSubItemTabs(item);
+    openSubItem(0);
+
+    itemModalOverlay.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
 }
 
-exportPdfBtn.addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const text = buildPackingPreview();
-    const lines = doc.splitTextToSize(text, 180);
-    let y = 10;
-    lines.forEach(line => {
-        doc.text(line, 10, y);
-        y += 6;
+function closeItemModal() {
+    itemModalOverlay.classList.add("hidden");
+    document.body.style.overflow = "";
+}
+
+/* ------------------------------------------------------------
+   SUB-ITEM TABS
+------------------------------------------------------------ */
+
+function renderSubItemTabs(item) {
+    const tabs = document.getElementById("subItemTabs");
+    tabs.innerHTML = "";
+
+    item.subItems.forEach((sub, index) => {
+        const btn = document.createElement("button");
+        btn.className = "subitem-tab";
+        btn.textContent = sub.name;
+        btn.dataset.index = index;
+
+        btn.addEventListener("click", () => openSubItem(index));
+
+        tabs.appendChild(btn);
     });
 
-    const allItems = [...male.items, ...female.items, ...male.carry, ...female.carry];
-    let imgY = y + 10;
-    allItems.forEach(i => {
-        if (i.photo) {
-            try {
-                doc.addImage(i.photo, "JPEG", 10, imgY, 30, 30);
-                imgY += 35;
-            } catch (e) {}
+    const addBtn = document.createElement("button");
+    addBtn.className = "subitem-tab add-tab";
+    addBtn.textContent = "+ Add new";
+    addBtn.addEventListener("click", () => addSubItem(item));
+    tabs.appendChild(addBtn);
+}
+
+/* ------------------------------------------------------------
+   ADD SUB-ITEM
+------------------------------------------------------------ */
+
+function addSubItem(item) {
+    const name = prompt("Sub-item name:");
+    if (!name) return;
+
+    item.subItems.push({
+        name,
+        description: "",
+        photos: [],
+        weightOverride: null,
+        packed: false
+    });
+
+    renderSubItemTabs(item);
+    openSubItem(item.subItems.length - 1);
+}
+
+/* ------------------------------------------------------------
+   OPEN SUB-ITEM
+------------------------------------------------------------ */
+
+function openSubItem(index) {
+    activeSubItemIndex = index;
+
+    const cat = tripData.categories.find(c => c.key === activeCategoryKey);
+    const item = cat.items.find(i => i.key === activeItemKey);
+    const sub = item.subItems[index];
+
+    const content = document.getElementById("subItemContent");
+    content.innerHTML = "";
+
+    const left = document.createElement("div");
+    left.className = "subitem-photos";
+
+    const mainPhoto = document.createElement("img");
+    mainPhoto.className = "subitem-main-photo";
+    mainPhoto.src = sub.photos[0] || "";
+    mainPhoto.addEventListener("click", () => openPhotoViewer(0));
+
+    left.appendChild(mainPhoto);
+
+    const thumbs = document.createElement("div");
+    thumbs.className = "subitem-thumbnails";
+
+    sub.photos.forEach((p, idx) => {
+        const t = document.createElement("img");
+        t.className = "subitem-thumbnail";
+        t.src = p;
+        t.addEventListener("click", () => openPhotoViewer(idx));
+        thumbs.appendChild(t);
+    });
+
+    const addThumb = document.createElement("div");
+    addThumb.className = "subitem-thumbnail add-thumb";
+    addThumb.textContent = "+";
+    addThumb.addEventListener("click", () => addPhotoToSubItem(sub));
+    thumbs.appendChild(addThumb);
+
+    left.appendChild(thumbs);
+
+    const right = document.createElement("div");
+    right.className = "subitem-details";
+
+    const title = document.createElement("h3");
+    title.textContent = sub.name;
+    right.appendChild(title);
+
+    const desc = document.createElement("textarea");
+    desc.className = "subitem-description";
+    desc.value = sub.description;
+    desc.addEventListener("input", () => {
+        sub.description = desc.value;
+    });
+    right.appendChild(desc);
+
+    const weightField = document.createElement("div");
+    weightField.className = "subitem-field";
+    weightField.innerHTML = `
+        <label>Weight (kg):</label>
+        <input type="number" step="0.1" value="${sub.weightOverride || ""}">
+    `;
+    const weightInput = weightField.querySelector("input");
+    weightInput.addEventListener("input", () => {
+        sub.weightOverride = parseFloat(weightInput.value) || null;
+        updateDashboard();
+    });
+    right.appendChild(weightField);
+
+    const packedField = document.createElement("div");
+    packedField.className = "subitem-field";
+    packedField.innerHTML = `
+        <label>Packed:</label>
+        <input type="checkbox" ${sub.packed ? "checked" : ""}>
+    `;
+    const packedInput = packedField.querySelector("input");
+    packedInput.addEventListener("change", () => {
+        sub.packed = packedInput.checked;
+        updateDashboard();
+    });
+    right.appendChild(packedField);
+
+    const actions = document.createElement("div");
+    actions.className = "subitem-actions";
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "subitem-delete-btn";
+    deleteBtn.textContent = "Delete sub-item";
+    deleteBtn.addEventListener("click", () => {
+        if (confirm("Delete this sub-item?")) {
+            item.subItems.splice(index, 1);
+            renderSubItemTabs(item);
+            openSubItem(0);
         }
     });
 
-    doc.save("CruisePackPro_PackingList.pdf");
+    actions.appendChild(deleteBtn);
+    right.appendChild(actions);
+
+    content.appendChild(left);
+    content.appendChild(right);
+}
+
+/* ------------------------------------------------------------
+   ADD PHOTO TO SUB-ITEM
+------------------------------------------------------------ */
+
+function addPhotoToSubItem(sub) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.addEventListener("change", () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            sub.photos.push(reader.result);
+            openSubItem(activeSubItemIndex);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    input.click();
+}
+
+/* ------------------------------------------------------------
+   FULL-SCREEN PHOTO VIEWER
+------------------------------------------------------------ */
+
+const photoViewerOverlay = document.getElementById("photoViewerOverlay");
+const photoViewerImage = document.getElementById("photoViewerImage");
+const photoViewerCloseBtn = document.getElementById("photoViewerCloseBtn");
+
+photoViewerCloseBtn.addEventListener("click", closePhotoViewer);
+photoViewerOverlay.addEventListener("click", closePhotoViewer);
+
+function openPhotoViewer(index) {
+    const cat = tripData.categories.find(c => c.key === activeCategoryKey);
+    const item = cat.items.find(i => i.key === activeItemKey);
+    const sub = item.subItems[activeSubItemIndex];
+
+    photoViewerImage.src = sub.photos[index];
+    photoViewerOverlay.classList.remove("hidden");
+}
+
+function closePhotoViewer() {
+    photoViewerOverlay.classList.add("hidden");
+}
+
+/* ------------------------------------------------------------
+   TEMPLATE SYSTEM
+------------------------------------------------------------ */
+
+document.getElementById("saveTemplateBtn").addEventListener("click", () => {
+    const name = prompt("Template name:");
+    if (!name) return;
+
+    templates.push({
+        name,
+        data: JSON.parse(JSON.stringify(tripData))
+    });
+
+    renderTemplateList();
 });
 
-// Service worker
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+document.getElementById("loadTemplateBtn").addEventListener("click", () => {
+    const selected = document.querySelector("#templateList li.selected");
+    if (!selected) {
+        alert("Select a template first.");
+        return;
+    }
+
+    const name = selected.textContent;
+    const tpl = templates.find(t => t.name === name);
+
+    tripData = JSON.parse(JSON.stringify(tpl.data));
+    renderCategories();
+    updateDashboard();
+});
+
+document.getElementById("deleteTemplateBtn").addEventListener("click", () => {
+    const selected = document.querySelector("#templateList li.selected");
+    if (!selected) {
+        alert("Select a template first.");
+        return;
+    }
+
+    const name = selected.textContent;
+    templates = templates.filter(t => t.name !== name);
+
+    renderTemplateList();
+});
+
+function renderTemplateList() {
+    const list = document.getElementById("templateList");
+    list.innerHTML = "";
+
+    templates.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t.name;
+
+        li.addEventListener("click", () => {
+            document.querySelectorAll("#templateList li").forEach(x => x.classList.remove("selected"));
+            li.classList.add("selected");
+        });
+
+        list.appendChild(li);
+    });
 }
+
+/* ------------------------------------------------------------
+   EXPORT / IMPORT TRIP JSON
+------------------------------------------------------------ */
+
+document.getElementById("exportTripJsonBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(tripData)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "trip.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById("importTripJsonInput").addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        tripData = JSON.parse(reader.result);
+        renderCategories();
+        updateDashboard();
+    };
+    reader.readAsText(file);
+});
+
+/* ------------------------------------------------------------
+   EXPORT PDF (hook only)
+------------------------------------------------------------ */
+
+document.getElementById("exportPdfBtn").addEventListener("click", () => {
+    alert("PDF export hook — integrate jsPDF or your preferred library.");
+});
+
+/* ------------------------------------------------------------
+   GLOBAL SEARCH
+------------------------------------------------------------ */
+
+document.getElementById("globalSearchInput").addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+
+    document.querySelectorAll(".item-btn").forEach(btn => {
+        const match = btn.textContent.toLowerCase().includes(q);
+        btn.style.display = match ? "" : "none";
+    });
+});
+
+/* ------------------------------------------------------------
+   INITIAL RENDER
+------------------------------------------------------------ */
+
+renderCategories();
+updateDashboard();
+renderTemplateList();
