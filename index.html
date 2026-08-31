@@ -28,3 +28,206 @@
 
     <!-- DASHBOARD -->
     <section id="tab-dashboard" class="tab tab-active dashboard-modern">
+
+        <!-- Trip Summary Banner -->
+        <div class="trip-summary-banner">
+            <div class="tsb-left">
+                <div class="tsb-icon">🚢</div>
+            </div>
+            <div class="tsb-right">
+                <h2 id="tsbCruiseName">Your Cruise</h2>
+                <p id="tsbShipName"></p>
+                <p id="tsbSailDate"></p>
+                <p id="tsbCountdown"></p>
+            </div>
+        </div>
+
+        <!-- Cruise Line Icon -->
+        <div class="cruise-line-icons">
+            <img id="cliIcon" class="cli-icon" alt="Cruise Line Icon">
+        </div>
+
+        <!-- Weight Progress Ring -->
+        <div class="weight-progress-container">
+            <svg class="weight-ring" width="120" height="120">
+                <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+                <circle class="ring-progress" cx="60" cy="60" r="50"></circle>
+            </svg>
+            <div class="weight-ring-label">
+                <span id="wrValue">0%</span>
+                <p>Checked Weight</p>
+            </div>
+        </div>
+
+        <!-- Presets -->
+        <div class="preset-buttons">
+            <h3>Quick Presets</h3>
+            <div class="preset-row">
+                <button class="preset-btn" data-preset="ncl">NCL</button>
+                <button class="preset-btn" data-preset="msc">MSC</button>
+                <button class="preset-btn" data-preset="royal">Royal Caribbean</button>
+                <button class="preset-btn" data-preset="po">P&O</button>
+                <button class="preset-btn" data-preset="celebrity">Celebrity</button>
+            </div>
+            <div class="preset-row">
+                <button class="preset-btn" data-preset="ba">British Airways</button>
+                <button class="preset-btn" data-preset="virgin">Virgin Atlantic</button>
+                <button class="preset-btn" data-preset="jet2">Jet2</button>
+                <button class="preset-btn" data-preset="tui">TUI</button>
+            </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="dashboard-hero">
+            <h1>Pack for the good part</h1>
+            <p>
+                A calm little check before the big departure. Keep an eye on the scale,
+                then get back to planning the first sunset on deck.
+            </p>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- Trip Details Card -->
+            <div class="dash-card">
+                <h2>Trip details</h2>
+                <div class="dash-field"><strong>Cruise:</strong> <span id="dashCruiseLine"></span></div>
+                <div class="dash-field"><strong>Ship:</strong> <span id="dashShip"></span></div>
+                <div class="dash-field"><strong>Sailing:</strong> <span id="dashDepartDate"></span></div>
+                <div class="dash-field"><strong>Allowance:</strong> <span id="dashAllowance"></span></div>
+
+                <div class="dash-actions">
+                    <button id="editTripBtn">Edit details</button>
+                    <button id="newTripBtn">New trip</button>
+                </div>
+            </div>
+
+            <!-- Weight Check Card -->
+            <div class="dash-card">
+                <h2>Weight check</h2>
+                <div class="dash-field"><strong>Checked:</strong> <span id="dashCheckedWeight"></span></div>
+                <div class="dash-field"><strong>Carry-on:</strong> <span id="dashCarryWeight"></span></div>
+                <div class="dash-field"><strong>Packed items:</strong> <span id="dashPackedItems"></span></div>
+                <div class="dash-field"><strong>Checked bag allowance:</strong> <span id="dashAllowanceKg"></span></div>
+                <div class="dash-field"><strong>Checked bag remaining:</strong> <span id="dashRemainingKg"></span></div>
+
+                <div class="dash-actions">
+                    <button id="openPackingListBtn">Open packing list</button>
+                    <button id="saveTripBtn">Save trip</button>
+                    <button id="loadTripBtn">Load</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- PACKING WORKSPACE -->
+    <section id="tab-packing" class="tab">
+        <div class="packing-header">
+            <h1>Packing workspace</h1>
+            <p>Build and manage your packing list for this voyage.</p>
+        </div>
+
+        <div class="packing-toolbar">
+            <div class="packing-search">
+                <input type="text" id="globalSearchInput" placeholder="Search items…">
+            </div>
+            <div class="packing-buttons">
+                <button id="addCategoryBtn">Add category</button>
+                <button id="addItemBtn">Add item</button>
+            </div>
+        </div>
+
+        <div id="categoryGrid" class="category-grid">
+            <!-- Categories + items rendered by script.js -->
+        </div>
+    </section>
+
+    <!-- TEMPLATES -->
+    <section id="tab-templates" class="tab">
+        <div class="templates-header">
+            <h1>Templates</h1>
+            <p>Save and reuse your favourite packing setups for future cruises.</p>
+        </div>
+
+        <div class="templates-layout">
+            <div class="templates-list">
+                <h2>Saved templates</h2>
+                <ul id="templateList">
+                    <!-- Populated by script.js -->
+                </ul>
+            </div>
+
+            <div class="templates-actions">
+                <h2>Manage templates</h2>
+                <div class="templates-buttons">
+                    <button id="saveTemplateBtn">Save current as template</button>
+                    <button id="loadTemplateBtn">Load selected template</button>
+                    <button id="deleteTemplateBtn">Delete selected template</button>
+                </div>
+
+                <h3>Export / Import</h3>
+                <div class="templates-export-import">
+                    <button id="exportTemplatesBtn">Export templates (JSON)</button>
+                    <label class="file-label">
+                        Import templates (JSON)
+                        <input type="file" id="importTemplatesInput" accept="application/json">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="tab-export" class="tab">
+        <div class="export-header">
+            <h1>Export & backup</h1>
+            <p>Generate a PDF or export your data for safekeeping.</p>
+        </div>
+
+        <div class="export-layout">
+            <div class="export-card">
+                <h2>PDF export</h2>
+                <p>Export your packing list with sub-items, photos, and weights.</p>
+                <button id="exportPdfBtn">Export packing list as PDF</button>
+            </div>
+
+            <div class="export-card">
+                <h2>Trip data</h2>
+                <p>Backup or restore your trip configuration.</p>
+                <button id="exportTripJsonBtn">Export trip as JSON</button>
+                <label class="file-label">
+                    Import trip (JSON)
+                    <input type="file" id="importTripJsonInput" accept="application/json">
+                </label>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ITEM MODAL -->
+<div id="itemModalOverlay" class="modal-overlay hidden">
+    <div id="itemModal" class="modal">
+        <div class="modal-header">
+            <h2 id="modalItemTitle">Item</h2>
+            <button id="closeItemModalBtn" class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-tabs" id="subItemTabs"></div>
+            <div class="modal-content" id="subItemContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- FULL-SCREEN PHOTO VIEWER -->
+<div id="photoViewerOverlay" class="photo-viewer-overlay hidden">
+    <div class="photo-viewer-inner">
+        <button id="photoViewerCloseBtn" class="photo-viewer-close">✕</button>
+        <img id="photoViewerImage" src="" alt="Photo" class="photo-viewer-image">
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
