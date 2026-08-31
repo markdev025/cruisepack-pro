@@ -53,7 +53,7 @@
                 <div class="card dash-card">
                     <h3>Packing items</h3>
                     <p><strong>Packed items:</strong> <span id="dashPackedCount">0</span></p>
-                    <p><strong>Remaining items:</strong> <span id="dashRemainingCount">0</span></p>
+                    <p><strong>Remaining items:</:</strong> <span id="dashRemainingCount">0</span></p>
                     <div id="dashThumbs" class="thumbs-strip"></div>
                     <button id="goPacking">Open packing workspace</button>
                 </div>
@@ -151,10 +151,15 @@
                 <div id="itemsArea"></div>
 
                 <div class="add-item">
+                    <select id="globalItemSearch">
+                        <option value="">Search existing items…</option>
+                    </select>
+
                     <input id="itemCategoryName" placeholder="Category for new item">
                     <input id="itemLabel" placeholder="Item label">
                     <input id="itemKey" placeholder="Weight key (e.g. tshirt)">
                     <input id="itemQty" type="number" placeholder="Qty" value="1">
+
                     <select id="itemWho">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -162,7 +167,9 @@
                         <option value="shared">Shared</option>
                         <option value="carry">Carry-on</option>
                     </select>
+
                     <input type="file" accept="image/*" id="itemPhotoFile">
+
                     <button id="addItemBtn">Add item</button>
                 </div>
             </div>
