@@ -1,0 +1,280 @@
+:root {
+    --bg: #eef3f8;
+    --card-bg: #ffffff;
+    --text: #111111;
+    --accent: #005bbb;
+    --accent-soft: #f97373;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+#app.dark {
+    --bg: #0f172a;
+    --card-bg: #1f2937;
+    --text: #e5e7eb;
+    --accent: #38bdf8;
+    --accent-soft: #f97373;
+    background: var(--bg);
+    color: var(--text);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: var(--accent);
+    color: #ffffff;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header-right button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #ffffff;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 20px;
+    background: #dbe4f3;
+}
+
+#app.dark nav {
+    background: #111827;
+}
+
+nav button {
+    flex: 1 1 auto;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+#app.dark nav button {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.tab {
+    display: none;
+}
+
+.tab.active {
+    display: block;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+label {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+input, select {
+    width: 100%;
+    padding: 6px;
+    margin-top: 2px;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hero {
+    margin-bottom: 16px;
+}
+
+.hero h2 {
+    margin: 0 0 4px;
+    font-size: 24px;
+}
+
+.hero p {
+    margin: 0;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+#app.dark .hero p {
+    color: #9ca3af;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+}
+
+.dash-card h3 {
+    margin-top: 0;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.cat-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.cat-btn {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    background: var(--accent-soft);
+    color: #ffffff;
+    font-weight: 500;
+    text-align: left;
+}
+
+.cat-del {
+    margin-top: 4px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+#itemsArea label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    gap: 6px;
+}
+
+.item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.item-del {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+.add-category {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.add-category input {
+    flex: 1;
+}
+
+.add-item {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.add-item input,
+.add-item select {
+    width: 100%;
+}
+
+.add-item button {
+    grid-column: 1 / -1;
+}
+
+.meter {
+    width: 100%;
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.meter-fill {
+    height: 100%;
+    background: #005bbb;
+    width: 0%;
+    transition: width 0.4s ease;
+}
+
+.meter-fill.female {
+    background: #d946ef;
+}
+
+#app.dark .meter {
+    background: #374151;
+}
+
+.meter-label {
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+pre {
+    white-space: pre-wrap;
+    font-size: 13px;
+}
+
+#customExcList {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+}
+
+.thumbs-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}

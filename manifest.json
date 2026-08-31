@@ -1,0 +1,15 @@
+{
+  "name": "CruisePack Pro",
+  "short_name": "CruisePack",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#005bbb",
+  "theme_color": "#005bbb",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

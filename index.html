@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CruisePack Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#005bbb">
+    <link rel="icon" href="icon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div id="app" class="light">
+    <header>
+        <h1>CruisePack Pro</h1>
+        <div class="header-right">
+            <button id="darkToggle">Dark mode</button>
+        </div>
+    </header>
+
+    <nav>
+        <button data-tab="dashboard">Dashboard</button>
+        <button data-tab="trip">Trip</button>
+        <button data-tab="packing">Packing</button>
+        <button data-tab="excursions">Excursions</button>
+        <button data-tab="weather">Weather</button>
+        <button data-tab="airline">Airline</button>
+        <button data-tab="export">Export</button>
+        <button data-tab="settings">Settings</button>
+    </nav>
+
+    <main>
+        <!-- Dashboard tab -->
+        <section id="tab-dashboard" class="tab active">
+            <div class="hero">
+                <h2>Pack for the good part</h2>
+                <p>
+                    A calm little check before the big departure. Keep an eye on the scale,
+                    then get back to planning the first sunset on deck.
+                </p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card dash-card">
+                    <h3>Trip details</h3>
+                    <p><strong>Cruise line:</strong> <span id="dashCruiseLine">–</span></p>
+                    <p><strong>Ship:</strong> <span id="dashShip">–</span></p>
+                    <p><strong>Sailing:</strong> <span id="dashSailing">–</span></p>
+                    <p><strong>Departure port:</strong> <span id="dashDepartPort">–</span></p>
+                    <p><strong>Allowance:</strong> <span id="dashAllowance">–</span></p>
+                </div>
+
+                <div class="card dash-card">
+                    <h3>Packing items</h3>
+                    <p><strong>Packed items:</strong> <span id="dashPackedCount">0</span></p>
+                    <p><strong>Remaining items:</strong> <span id="dashRemainingCount">0</span></p>
+                    <div id="dashThumbs" class="thumbs-strip"></div>
+                    <button id="goPacking">Open packing workspace</button>
+                </div>
+
+                <div class="card dash-card">
+                    <h3>Weight check</h3>
+                    <p><strong>Male checked:</strong> <span id="maleChecked">0.00 kg</span></p>
+                    <p><strong>Female checked:</strong> <span id="femaleChecked">0.00 kg</span></p>
+                    <p><strong>Male carry‑on:</strong> <span id="maleCarry">0.00 kg</span></p>
+                    <p><strong>Female carry‑on:</strong> <span id="femaleCarry">0.00 kg</span></p>
+                    <p><strong>Male status:</strong> <span id="maleStatus">OK</span></p>
+                    <p><strong>Female status:</strong> <span id="femaleStatus">OK</span></p>
+
+                    <div class="meter">
+                        <div class="meter-fill" id="maleMeter"></div>
+                    </div>
+                    <div class="meter-label">Male: <span id="maleMeterLabel"></span></div>
+
+                    <div class="meter">
+                        <div class="meter-fill female" id="femaleMeter"></div>
+                    </div>
+                    <div class="meter-label">Female: <span id="femaleMeterLabel"></span></div>
+
+                    <button id="autoBalance">Auto‑balance</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trip tab -->
+        <section id="tab-trip" class="tab">
+            <h2>Trip</h2>
+
+            <div class="card">
+                <h3>Cruise presets</h3>
+                <select id="cruisePreset">
+                    <option value="">Choose cruise…</option>
+                    <option value="prima">NCL Prima</option>
+                    <option value="epic">NCL Epic</option>
+                    <option value="msc_virtuosa">MSC Virtuosa</option>
+                    <option value="icon">Royal Caribbean Icon</option>
+                    <option value="iona">P&O Iona</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h3>Trip details</h3>
+                <label>Trip name</label>
+                <input id="tripName" placeholder="NCL Prima – Orlando 6 Sept">
+                <label>Cruise line</label>
+                <input id="cruiseLine" placeholder="Norwegian Cruise Line">
+                <label>Ship</label>
+                <input id="ship" placeholder="Prima">
+                <label>Departure port</label>
+                <input id="departPort" placeholder="Orlando (Port Canaveral)">
+                <label>Departure date</label>
+                <input id="departDate" placeholder="6 September">
+            </div>
+
+            <div class="card">
+                <h3>Airline presets</h3>
+                <select id="airlinePreset">
+                    <option value="">Choose airline…</option>
+                    <option value="ba">British Airways (23 kg)</option>
+                    <option value="virgin">Virgin Atlantic (23 kg)</option>
+                    <option value="tui">TUI (20 kg)</option>
+                    <option value="jet2">Jet2 (22 kg)</option>
+                </select>
+                <label>Allowance per bag (kg)</label>
+                <input id="allowanceKg" value="23">
+            </div>
+
+            <div class="card">
+                <button id="newTrip">New trip</button>
+                <button id="saveTrip">Save trip</button>
+                <button id="loadTrip">Load trip</button>
+            </div>
+        </section>
+
+        <!-- Packing tab -->
+        <section id="tab-packing" class="tab">
+            <h2>Packing</h2>
+
+            <div class="card">
+                <h3>Categories</h3>
+                <div id="categoryList" class="category-grid"></div>
+
+                <div class="add-category">
+                    <input id="newCategoryName" placeholder="New category name">
+                    <button id="addCategoryBtn">Add category</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Items</h3>
+                <div id="itemsArea"></div>
+
+                <div class="add-item">
+                    <input id="itemCategoryName" placeholder="Category for new item">
+                    <input id="itemLabel" placeholder="Item label">
+                    <input id="itemKey" placeholder="Weight key (e.g. tshirt)">
+                    <input id="itemQty" type="number" placeholder="Qty" value="1">
+                    <select id="itemWho">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="both">Both</option>
+                        <option value="shared">Shared</option>
+                        <option value="carry">Carry-on</option>
+                    </select>
+                    <input type="file" accept="image/*" id="itemPhotoFile">
+                    <button id="addItemBtn">Add item</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Excursions tab -->
+        <section id="tab-excursions" class="tab">
+            <h2>Excursions</h2>
+            <div class="card">
+                <h3>Templates</h3>
+                <select id="excursionTemplate">
+                    <option value="">Choose template…</option>
+                    <option value="beach">Beach Day</option>
+                    <option value="snorkel">Snorkelling</option>
+                    <option value="city">City Walk</option>
+                    <option value="rainforest">Rainforest Hike</option>
+                    <option value="waterpark">Waterpark</option>
+                    <option value="formal">Formal Night</option>
+                    <option value="seaday">Sea Day Relax</option>
+                </select>
+                <button id="applyExcursion">Apply template</button>
+            </div>
+
+            <div class="card">
+                <h3>Custom excursions</h3>
+                <input id="newExcName" placeholder="Excursion name">
+                <input id="newExcItemKey" placeholder="Item key (e.g. water_shoes)">
+                <button id="addExcTemplate">Add custom excursion</button>
+                <div id="customExcList"></div>
+            </div>
+        </section>
+
+        <!-- Weather tab -->
+        <section id="tab-weather" class="tab">
+            <h2>Weather</h2>
+            <div class="card">
+                <label>OpenWeather API key</label>
+                <input id="weatherApiKey" placeholder="Your API key">
+                <button id="fetchWeather">Fetch weather</button>
+            </div>
+            <div class="card">
+                <pre id="weatherOutput"></pre>
+            </div>
+        </section>
+
+        <!-- Airline tab -->
+        <section id="tab-airline" class="tab">
+            <h2>Airline</h2>
+            <div class="card">
+                <p>Allowance per bag: <span id="allowanceDisplay">23 kg</span></p>
+                <p>Carry‑on rules: standard cabin bag + personal item.</p>
+            </div>
+        </section>
+
+        <!-- Export tab -->
+        <section id="tab-export" class="tab">
+            <h2>Export</h2>
+            <div class="card">
+                <button id="exportPdf">Export packing list as PDF</button>
+            </div>
+            <div class="card">
+                <pre id="packingPreview"></pre>
+            </div>
+        </section>
+
+        <!-- Settings tab -->
+        <section id="tab-settings" class="tab">
+            <h2>Settings</h2>
+            <div class="card">
+                <p>Dark mode: uses system preference + manual toggle.</p>
+                <p>Install CruisePack Pro as an app via “Add to Home Screen”.</p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
