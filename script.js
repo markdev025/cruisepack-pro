@@ -520,6 +520,71 @@ document.getElementById("globalSearchInput").addEventListener("input", function 
 });
 
 /* ------------------------------------------------------------
+   DASHBOARD BUTTONS
+------------------------------------------------------------ */
+
+// Edit trip details
+document.getElementById("editTripBtn").addEventListener("click", () => {
+    const cruise = prompt("Cruise line:", tripData.cruiseLine);
+    const ship = prompt("Ship:", tripData.ship);
+    const date = prompt("Sailing date:", tripData.departDate);
+    const allowance = prompt("Checked allowance (kg):", tripData.allowanceKg);
+
+    if (cruise !== null) tripData.cruiseLine = cruise;
+    if (ship !== null) tripData.ship = ship;
+    if (date !== null) tripData.departDate = date;
+    if (allowance !== null) tripData.allowanceKg = parseFloat(allowance) || tripData.allowanceKg;
+
+    updateDashboard();
+});
+
+// New trip (reset everything)
+document.getElementById("newTripBtn").addEventListener("click", () => {
+    if (!confirm("Start a new trip? This will clear all categories and items.")) return;
+
+    tripData = {
+        cruiseLine: "",
+        ship: "",
+        departDate: "",
+        allowanceKg: 50,
+        categories: []
+    };
+
+    renderCategories();
+    updateDashboard();
+});
+
+// Open packing list tab
+document.getElementById("openPackingListBtn").addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+    document.querySelector('[data-tab="tab-packing"]').classList.add("active");
+
+    document.querySelectorAll(".tab").forEach(section => section.classList.remove("tab-active"));
+    document.getElementById("tab-packing").classList.add("tab-active");
+});
+
+// Save trip to localStorage
+document.getElementById("saveTripBtn").addEventListener("click", () => {
+    localStorage.setItem("cruisepack_trip", JSON.stringify(tripData));
+    alert("Trip saved.");
+});
+
+// Load trip from localStorage
+document.getElementById("loadTripBtn").addEventListener("click", () => {
+    const saved = localStorage.getItem("cruisepack_trip");
+    if (!saved) {
+        alert("No saved trip found.");
+        return;
+    }
+
+    tripData = JSON.parse(saved);
+    renderCategories();
+    updateDashboard();
+    alert("Trip loaded.");
+});
+
+
+/* ------------------------------------------------------------
    INITIAL RENDER
 ------------------------------------------------------------ */
 
