@@ -1,4 +1,4 @@
-// CruisePack Pro Web Edition (hybrid dashboard, category grid, custom excursions, photo upload, thumbnails)
+// CruisePack Pro Web Edition (hybrid dashboard, category grid, custom excursions, photo upload, thumbnails, global item search)
 
 const app = document.getElementById("app");
 const tabs = document.querySelectorAll("nav button");
@@ -167,6 +167,7 @@ const categoryList = document.getElementById("categoryList");
 const itemsArea = document.getElementById("itemsArea");
 const newCategoryName = document.getElementById("newCategoryName");
 const addCategoryBtn = document.getElementById("addCategoryBtn");
+const globalItemSearch = document.getElementById("globalItemSearch");
 
 function renderCategories() {
     categoryList.innerHTML = "";
@@ -185,6 +186,7 @@ function renderCategories() {
         del.addEventListener("click", () => {
             delete categories[cat];
             renderCategories();
+            buildGlobalItemList();
             itemsArea.innerHTML = "";
         });
 
@@ -194,6 +196,34 @@ function renderCategories() {
     });
 }
 renderCategories();
+
+// Global item search list
+function buildGlobalItemList() {
+    globalItemSearch.innerHTML = `<option value="">Search existing items…</option>`;
+    const seen = new Set();
+
+    Object.entries(categories).forEach(([cat, items]) => {
+        items.forEach(([label, key, qty, who, photo]) => {
+            if (!seen.has(label)) {
+                seen.add(label);
+                const opt = document.createElement("option");
+                opt.value = JSON.stringify({ label, key, qty, who });
+                opt.textContent = `${label} (${key})`;
+                globalItemSearch.appendChild(opt);
+            }
+        });
+    });
+}
+buildGlobalItemList();
+
+globalItemSearch.addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    const item = JSON.parse(e.target.value);
+    document.getElementById("itemLabel").value = item.label;
+    document.getElementById("itemKey").value = item.key;
+    document.getElementById("itemQty").value = item.qty;
+    document.getElementById("itemWho").value = item.who;
+});
 
 function renderItemsForCategory(cat) {
     itemsArea.innerHTML = "";
@@ -228,6 +258,7 @@ function renderItemsForCategory(cat) {
         delBtn.addEventListener("click", () => {
             categories[cat] = categories[cat].filter(i => i[0] !== label);
             renderItemsForCategory(cat);
+            buildGlobalItemList();
         });
 
         wrapper.appendChild(main);
@@ -242,6 +273,7 @@ addCategoryBtn.addEventListener("click", () => {
     if (!categories[name]) categories[name] = [];
     newCategoryName.value = "";
     renderCategories();
+    buildGlobalItemList();
 });
 
 // Add item
@@ -278,6 +310,7 @@ addItemBtn.addEventListener("click", () => {
         itemPhotoFile.value = "";
 
         renderCategories();
+        buildGlobalItemList();
         renderItemsForCategory(cat);
     };
 
@@ -368,6 +401,7 @@ applyExcursion.addEventListener("click", () => {
     }
 
     renderCategories();
+    buildGlobalItemList();
     alert("Excursion template applied. Choose category to see added items.");
 });
 
@@ -600,6 +634,7 @@ loadTripBtn.addEventListener("click", () => {
     categories = trip.categories || categories;
     customExcursions = trip.customExcursions || {};
     renderCategories();
+    buildGlobalItemList();
     renderExcursionTemplates();
     updateAllowance();
     updateDashboard();
@@ -658,7 +693,6 @@ exportPdfBtn.addEventListener("click", () => {
         y += 6;
     });
 
-    // Simple thumbnail embedding: first few photos
     const allItems = [...male.items, ...female.items, ...male.carry, ...female.carry];
     let imgY = y + 10;
     allItems.forEach(i => {
@@ -666,9 +700,7 @@ exportPdfBtn.addEventListener("click", () => {
             try {
                 doc.addImage(i.photo, "JPEG", 10, imgY, 30, 30);
                 imgY += 35;
-            } catch (e) {
-                // ignore image errors
-            }
+            } catch (e) {}
         }
     });
 
