@@ -61,13 +61,13 @@ function updateDashboard() {
         safeGet("dashAllowance").textContent = tripData.allowanceKg + " kg";
 
         safeGet("tsbCruiseName").textContent =
-            tripData.cruiseLine ? tripData.cruiseLine : "Cruise not set";
+            tripData.cruiseLine ? tripData.cruiseLine : "Your Cruise";
 
         safeGet("tsbShipName").textContent =
-            tripData.ship ? "Ship: " + tripData.ship : "Ship not set";
+            tripData.ship ? "Ship: " + tripData.ship : "";
 
         safeGet("tsbSailDate").textContent =
-            tripData.departDate ? "Sailing: " + tripData.departDate : "Sailing date not set";
+            tripData.departDate ? "Sailing: " + tripData.departDate : "";
 
         let countdownText = "";
         if (tripData.departDate) {
