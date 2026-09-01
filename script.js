@@ -208,6 +208,27 @@ function renderTemplates() {
         console.log("Template render failed safely:", err);
     }
 }
+// ------------------------------
+// TAB SWITCHING
+// ------------------------------
+
+document.querySelectorAll(".nav-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+
+        // Remove active class from all tabs
+        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        // Hide all sections
+        document.querySelectorAll(".tab").forEach(section => {
+            section.classList.remove("tab-active");
+        });
+
+        // Show the selected section
+        const target = tab.dataset.tab;
+        document.getElementById(target).classList.add("tab-active");
+    });
+});
 
 // ------------------------------
 // SAFE BUTTON HANDLERS
