@@ -50,7 +50,7 @@ function safeGet(id) {
 }
 
 // ------------------------------
-// DASHBOARD UPDATE (iPad‑SAFE)
+// DASHBOARD UPDATE
 // ------------------------------
 
 function updateDashboard() {
@@ -60,7 +60,6 @@ function updateDashboard() {
         safeGet("dashDepartDate").textContent = tripData.departDate || "Not set";
         safeGet("dashAllowance").textContent = tripData.allowanceKg + " kg";
 
-        // Trip Summary Banner
         safeGet("tsbCruiseName").textContent =
             tripData.cruiseLine ? tripData.cruiseLine : "Cruise not set";
 
@@ -70,7 +69,6 @@ function updateDashboard() {
         safeGet("tsbSailDate").textContent =
             tripData.departDate ? "Sailing: " + tripData.departDate : "Sailing date not set";
 
-        // Countdown
         let countdownText = "";
         if (tripData.departDate) {
             const sail = new Date(tripData.departDate);
@@ -85,11 +83,9 @@ function updateDashboard() {
         }
         safeGet("tsbCountdown").textContent = countdownText;
 
-        // Cruise icon
         const key = (tripData.cruiseLine || "").toLowerCase();
         safeGet("cliIcon").src = cruiseIcons[key] || "";
 
-        // Weight stats
         const checkedWeight = calculateTotalWeight("checked");
         const carryWeight = calculateTotalWeight("carry");
         const packedItems = countPackedItems();
@@ -102,7 +98,6 @@ function updateDashboard() {
         const remaining = tripData.allowanceKg - checkedWeight;
         safeGet("dashRemainingKg").textContent = remaining.toFixed(1) + " kg";
 
-        // Weight ring
         const percent = Math.min(100, Math.round((checkedWeight / tripData.allowanceKg) * 100));
         safeGet("wrValue").textContent = percent + "%";
 
@@ -137,14 +132,14 @@ function countPackedItems() {
 }
 
 // ------------------------------
-// SAFE CATEGORY RENDERING
+// CATEGORY RENDERING
 // ------------------------------
-
-const categoryGrid = safeGet("categoryGrid");
 
 function renderCategories() {
     try {
+        const categoryGrid = safeGet("categoryGrid");
         categoryGrid.innerHTML = "";
+
         tripData.categories.forEach(cat => {
             const card = document.createElement("div");
             card.className = "category-card";
@@ -187,14 +182,14 @@ function renderCategories() {
 }
 
 // ------------------------------
-// SAFE TEMPLATE RENDERING
+// TEMPLATE RENDERING
 // ------------------------------
-
-const templateList = safeGet("templateList");
 
 function renderTemplates() {
     try {
+        const templateList = safeGet("templateList");
         templateList.innerHTML = "";
+
         templates.forEach(t => {
             const li = document.createElement("li");
             li.textContent = t.name;
@@ -206,10 +201,12 @@ function renderTemplates() {
 }
 
 // ------------------------------
-// TAB SWITCHING (wrapped in DOMContentLoaded)
+// DOMContentLoaded — ALL HANDLERS
 // ------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
+
+    // TAB SWITCHING
     document.querySelectorAll(".nav-tab").forEach(tab => {
         tab.addEventListener("click", () => {
 
@@ -224,70 +221,60 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById(target).classList.add("tab-active");
         });
     });
-});
 
-// ------------------------------
-// SAFE BUTTON HANDLERS
-// ------------------------------
-
-document.querySelectorAll(".preset-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const p = presets[btn.dataset.preset];
-        if (!p) return;
-        tripData.cruiseLine = p.cruiseLine;
-        tripData.ship = p.ship;
-        tripData.allowanceKg = p.allowanceKg;
-        updateDashboard();
+    // PRESET BUTTONS
+    document.querySelectorAll(".preset-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const p = presets[btn.dataset.preset];
+            if (!p) return;
+            tripData.cruiseLine = p.cruiseLine;
+            tripData.ship = p.ship;
+            tripData.allowanceKg = p.allowanceKg;
+            updateDashboard();
+        });
     });
-});
 
-safeGet("addCategoryBtn").addEventListener("click", () => {
-    const name = prompt("Category name:");
-    if (!name) return;
-    tripData.categories.push({
-        id: Date.now(),
-        name,
-        items: []
+    // ADD CATEGORY
+    safeGet("addCategoryBtn").addEventListener("click", () => {
+        const name = prompt("Category name:");
+        if (!name) return;
+        tripData.categories.push({
+            id: Date.now(),
+            name,
+            items: []
+        });
+        renderCategories();
     });
-    renderCategories();
-});
 
-safeGet("addItemBtn").addEventListener("click", () => {
-    if (tripData.categories.length === 0) {
-        alert("Add a category first.");
-        return;
-    }
-    const catName = prompt("Category to add item to:");
-    const cat = tripData.categories.find(c => c.name.toLowerCase() === catName?.toLowerCase());
-    if (!cat) {
-        alert("Category not found.");
-        return;
-    }
-    const label = prompt("Item name:");
-    const weight = parseFloat(prompt("Weight (kg):") || "0");
-    const bagType = prompt("Bag type (checked/carry):", "checked");
+    // ADD ITEM
+    safeGet("addItemBtn").addEventListener("click", () => {
+        if (tripData.categories.length === 0) {
+            alert("Add a category first.");
+            return;
+        }
+        const catName = prompt("Category to add item to:");
+        const cat = tripData.categories.find(c => c.name.toLowerCase() === catName?.toLowerCase());
+        if (!cat) {
+            alert("Category not found.");
+            return;
+        }
+        const label = prompt("Item name:");
+        const weight = parseFloat(prompt("Weight (kg):") || "0");
+        const bagType = prompt("Bag type (checked/carry):", "checked");
 
-    cat.items.push({
-        id: Date.now(),
-        label,
-        weight,
-        bagType: bagType === "carry" ? "carry" : "checked",
-        packed: false
-    });
-    renderCategories();
-    updateDashboard();
-});
-
-// ------------------------------
-// SAFE INIT
-// ------------------------------
-
-document.addEventListener("DOMContentLoaded", () => {
-    try {
+        cat.items.push({
+            id: Date.now(),
+            label,
+            weight,
+            bagType: bagType === "carry" ? "carry" : "checked",
+            packed: false
+        });
         renderCategories();
         updateDashboard();
-        renderTemplates();
-    } catch (err) {
-        console.log("Initialisation failed safely:", err);
-    }
+    });
+
+    // INITIAL RENDER
+    renderCategories();
+    updateDashboard();
+    renderTemplates();
 });
