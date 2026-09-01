@@ -70,21 +70,17 @@ function updateDashboard() {
         safeGet("tsbSailDate").textContent =
             tripData.departDate ? "Sailing: " + tripData.departDate : "Sailing date not set";
 
-        // iPad‑SAFE DATE PARSING
+        // Countdown
         let countdownText = "";
         if (tripData.departDate) {
             const sail = new Date(tripData.departDate);
-
             if (!isNaN(sail.getTime())) {
                 const today = new Date();
                 const diff = Math.ceil((sail - today) / (1000 * 60 * 60 * 24));
-
                 countdownText =
-                    diff > 0
-                        ? diff + " days until departure"
-                        : diff === 0
-                            ? "Sailing today!"
-                            : "This cruise has already sailed";
+                    diff > 0 ? diff + " days until departure" :
+                    diff === 0 ? "Sailing today!" :
+                    "This cruise has already sailed";
             }
         }
         safeGet("tsbCountdown").textContent = countdownText;
@@ -208,25 +204,25 @@ function renderTemplates() {
         console.log("Template render failed safely:", err);
     }
 }
+
 // ------------------------------
-// TAB SWITCHING
+// TAB SWITCHING (wrapped in DOMContentLoaded)
 // ------------------------------
 
-document.querySelectorAll(".nav-tab").forEach(tab => {
-    tab.addEventListener("click", () => {
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".nav-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
 
-        // Remove active class from all tabs
-        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
+            document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
 
-        // Hide all sections
-        document.querySelectorAll(".tab").forEach(section => {
-            section.classList.remove("tab-active");
+            document.querySelectorAll(".tab").forEach(section => {
+                section.classList.remove("tab-active");
+            });
+
+            const target = tab.dataset.tab;
+            document.getElementById(target).classList.add("tab-active");
         });
-
-        // Show the selected section
-        const target = tab.dataset.tab;
-        document.getElementById(target).classList.add("tab-active");
     });
 });
 
